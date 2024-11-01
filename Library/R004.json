@@ -1,0 +1,44 @@
+{
+    "model_id": "R004",
+    "name": "Frequent Small Transactions",
+    "description": "Monitors frequent small transactions (e.g., <$200) within a short period to detect structuring.",
+    "threshold": 0.85,
+    "evaluations": [
+      {
+        "name": "Small_Transaction_Check",
+        "type": "comparison",
+        "left": "transaction.amount",
+        "operator": "<",
+        "right": 200,
+        "weight": 3
+      },
+      {
+        "name": "Recent_Small_Transaction_Count",
+        "type": "aggregation",
+        "aggregation": "COUNT",
+        "field": "transaction.id",
+        "conditions": {
+          "type": "comparison",
+          "left": "transaction.amount",
+          "operator": "<",
+          "right": 200
+        },
+        "weight": 5
+      },
+      {
+        "name": "Frequency_Within_Time_Window",
+        "type": "comparison",
+        "left": "@Recent_Small_Transaction_Count",
+        "operator": ">",
+        "right": 10,
+        "weight": 4
+      }
+    ],
+    "actions": [
+      {
+        "type": "flag_transaction",
+        "reason": "Detected frequent small transactions within a short period, potentially indicating structuring."
+      }
+    ]
+  }
+  

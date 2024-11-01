@@ -1,0 +1,49 @@
+{
+    "model_id": "R015",
+    "name": "High Transaction Count or Value in Specific Industries",
+    "description": "Flags high transaction counts or values involving high-risk industries like gambling or cryptocurrency exchanges.",
+    "threshold": 0.9,
+    "evaluations": [
+      {
+        "name": "High_Risk_Industry_Check",
+        "type": "comparison",
+        "left": "industry",
+        "operator": "IN",
+        "right": ["Gambling", "Crypto", "Cash_Advance"],
+        "weight": 5
+      },
+      {
+        "name": "Industry_Transaction_Count",
+        "type": "aggregation",
+        "aggregation": "COUNT",
+        "field": "transaction_id",
+        "conditions": {
+          "type": "comparison",
+          "left": "industry",
+          "operator": "IN",
+          "right": ["Gambling", "Crypto", "Cash_Advance"]
+        },
+        "weight": 4
+      },
+      {
+        "name": "High_Industry_Transaction_Value",
+        "type": "aggregation",
+        "aggregation": "SUM",
+        "field": "amount",
+        "conditions": {
+          "type": "comparison",
+          "left": "industry",
+          "operator": "IN",
+          "right": ["Gambling", "Crypto", "Cash_Advance"]
+        },
+        "weight": 4
+      }
+    ],
+    "actions": [
+      {
+        "type": "alert_team",
+        "reason": "High transaction count or value detected in high-risk industries."
+      }
+    ]
+  }
+  

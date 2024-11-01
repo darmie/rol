@@ -1,0 +1,39 @@
+{
+    "model_id": "R008",
+    "name": "Rapid Withdrawals Following Large Deposits",
+    "description": "Flags large transfers that occur shortly after a large deposit, potentially indicating layering.",
+    "threshold": 0.9,
+    "evaluations": [
+      {
+        "name": "Large_Deposit_Check",
+        "type": "comparison",
+        "left": "transaction.amount",
+        "operator": ">=",
+        "right": 10000,
+        "weight": 5
+      },
+      {
+        "name": "Rapid_Withdrawal_Check",
+        "type": "comparison",
+        "left": "timediff(transaction.timestamp, previous_transaction.timestamp)",
+        "operator": "<=",
+        "right": "10 minutes",
+        "weight": 4
+      },
+      {
+        "name": "Withdrawal_Amount_Check",
+        "type": "comparison",
+        "left": "transaction.amount",
+        "operator": ">=",
+        "right": 8000,
+        "weight": 3
+      }
+    ],
+    "actions": [
+      {
+        "type": "flag_transaction",
+        "reason": "Large transfer detected shortly after a large deposit."
+      }
+    ]
+  }
+  

@@ -1,0 +1,39 @@
+{
+    "model_id": "R010",
+    "name": "Suspicious IP or Geo-Location Changes",
+    "description": "Detects transactions initiated from IPs or geo-locations that differ from historical patterns, especially during unusual hours.",
+    "threshold": 0.85,
+    "evaluations": [
+      {
+        "name": "Unusual_IP_Check",
+        "type": "comparison",
+        "left": "transaction.ip_address",
+        "operator": "NOT IN",
+        "right": "profile.common_ips",
+        "weight": 4
+      },
+      {
+        "name": "Unusual_Location_Check",
+        "type": "comparison",
+        "left": "transaction.geo_location",
+        "operator": "NOT IN",
+        "right": "profile.common_locations",
+        "weight": 4
+      },
+      {
+        "name": "Unusual_Hour_Check",
+        "type": "comparison",
+        "left": "strftime('%H', transaction_date)",
+        "operator": "IN",
+        "right": ["01", "02", "03", "04", "05"],
+        "weight": 3
+      }
+    ],
+    "actions": [
+      {
+        "type": "flag_transaction",
+        "reason": "Transaction from suspicious IP or location at an unusual time."
+      }
+    ]
+  }
+  

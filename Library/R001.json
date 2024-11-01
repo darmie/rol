@@ -1,0 +1,43 @@
+{
+  "model_id": "R001",
+  "name": "High-Value Transactions",
+  "description": "Flags transactions exceeding a high-value threshold and monitors for rapid withdrawals or transfers post-deposit.",
+  "threshold": 0.85,
+  "evaluations": [
+    {
+      "name": "High_Value_Transaction_Check",
+      "type": "comparison",
+      "left": "transaction.amount",
+      "operator": ">=",
+      "right": 10000,
+      "weight": 5
+    },
+    {
+      "name": "Recent_Large_Transaction_Count",
+      "type": "aggregation",
+      "aggregation": "COUNT",
+      "field": "transaction.id",
+      "conditions": {
+        "type": "comparison",
+        "left": "transaction.amount",
+        "operator": ">=",
+        "right": 5000
+      },
+      "weight": 4
+    },
+    {
+      "name": "Rapid_Transfer_After_Deposit",
+      "type": "comparison",
+      "left": "timediff(transaction.timestamp, previous_transaction.timestamp)",
+      "operator": "<=",
+      "right": "10 minutes",
+      "weight": 3
+    }
+  ],
+  "actions": [
+    {
+      "type": "flag_transaction",
+      "reason": "High-value transaction detected with additional checks for rapid withdrawals or transfers after deposit."
+    }
+  ]
+}

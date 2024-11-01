@@ -1,0 +1,44 @@
+{
+    "model_id": "R013",
+    "name": "Known Fraud and Structuring Patterns",
+    "description": "Detects patterns of structuring, such as split transactions below reporting thresholds and frequent small payments.",
+    "threshold": 0.9,
+    "evaluations": [
+      {
+        "name": "Split_Transaction_Check",
+        "type": "comparison",
+        "left": "amount",
+        "operator": "<",
+        "right": 10000,
+        "weight": 5
+      },
+      {
+        "name": "Frequent_Small_Transaction_Count",
+        "type": "aggregation",
+        "aggregation": "COUNT",
+        "field": "amount",
+        "conditions": {
+          "type": "comparison",
+          "left": "amount",
+          "operator": "<",
+          "right": 500
+        },
+        "weight": 4
+      },
+      {
+        "name": "Frequency_Threshold_Exceeded",
+        "type": "comparison",
+        "left": "@Frequent_Small_Transaction_Count",
+        "operator": ">",
+        "right": 10,
+        "weight": 4
+      }
+    ],
+    "actions": [
+      {
+        "type": "flag_transaction",
+        "reason": "Detected structuring patterns, including split transactions and frequent small payments."
+      }
+    ]
+  }
+  

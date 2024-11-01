@@ -1,0 +1,31 @@
+{
+    "model_id": "R006",
+    "name": "Unusual Transaction Currency and Amount Patterns",
+    "description": "Alerts if a transaction occurs in an unusual currency or if the transaction amount significantly deviates from historical averages.",
+    "threshold": 0.85,
+    "evaluations": [
+      {
+        "name": "Unusual_Currency_Check",
+        "type": "comparison",
+        "left": "transaction.currency",
+        "operator": "NOT IN",
+        "right": "profile.common_currencies",
+        "weight": 4
+      },
+      {
+        "name": "Amount_Deviation_Check",
+        "type": "comparison",
+        "left": "transaction.amount",
+        "operator": ">",
+        "right": "profile.average_transaction_amount * 1.5",
+        "weight": 5
+      }
+    ],
+    "actions": [
+      {
+        "type": "flag_transaction",
+        "reason": "Transaction flagged for unusual currency or significant deviation in amount from historical patterns."
+      }
+    ]
+  }
+  

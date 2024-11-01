@@ -1,0 +1,23 @@
+{
+    "model_id": "R005",
+    "name": "Recently Created Account Transaction",
+    "description": "Flags transactions from accounts created within the last 30 days.",
+    "threshold": 0.8,
+    "evaluations": [
+      {
+        "name": "Account_Age_Check",
+        "type": "comparison",
+        "left": "timediff(now, profile.accountCreated)",
+        "operator": "<=",
+        "right": "30 days",
+        "weight": 5
+      }
+    ],
+    "actions": [
+      {
+        "type": "flag_transaction",
+        "reason": "Transaction from a recently created account (less than 30 days old)."
+      }
+    ]
+  }
+  

@@ -1,0 +1,54 @@
+{
+  "model_id": "M204",
+  "name": "High-Value Transactions with Conditional Risk",
+  "description": "Flags high-value transactions and applies tiered risk assessments.",
+  "threshold": 0.85,
+  "evaluations": [
+    {
+      "name": "Transaction_Amount_Check",
+      "type": "comparison",
+      "left": "transaction.amount",
+      "operator": ">=",
+      "right": 10000,
+      "weight": 2
+    },
+    {
+      "name": "Conditional_Risk_Assessment",
+      "type": "conditional",
+      "if": [
+        {
+          "condition": {
+            "type": "comparison",
+            "left": "transaction.amount",
+            "operator": ">",
+            "right": 50000
+          },
+          "result": "high_risk"
+        }
+      ],
+      "else": "low_risk"
+    },
+    {
+      "name": "High_Risk_Indicator_Check",
+      "type": "comparison",
+      "left": "@Conditional_Risk_Assessment",
+      "operator": "==",
+      "right": "high_risk",
+      "weight": 3
+    },
+    {
+      "name": "Entity_Profile_Threshold_Check",
+      "type": "comparison",
+      "left": "profile.amountThreshold",
+      "operator": "=<",
+      "right": "30000",
+      "weight": 5
+    }
+  ],
+  "actions": [
+    {
+      "type": "flag_transaction",
+      "reason": "Transaction flagged based on tiered risk assessment."
+    }
+  ]
+}

@@ -1,0 +1,31 @@
+{
+    "model_id": "R014",
+    "name": "Beneficiary Country Outside Typical Profile",
+    "description": "Flags transactions sent to countries outside of the entity's usual transaction profile, especially high-risk jurisdictions.",
+    "threshold": 0.85,
+    "evaluations": [
+      {
+        "name": "New_Beneficiary_Country_Check",
+        "type": "comparison",
+        "left": "beneficiary_country",
+        "operator": "NOT IN",
+        "right": "whitelist.country",
+        "weight": 5
+      },
+      {
+        "name": "High_Risk_Country_Check",
+        "type": "comparison",
+        "left": "beneficiary_country",
+        "operator": "IN",
+        "right": ["CountryA", "CountryB", "CountryC"],
+        "weight": 4
+      }
+    ],
+    "actions": [
+      {
+        "type": "flag_transaction",
+        "reason": "Transaction directed to a beneficiary in an unusual or high-risk country."
+      }
+    ]
+  }
+  

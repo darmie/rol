@@ -1,0 +1,44 @@
+{
+    "model_id": "R007",
+    "name": "High Transaction Volume in High-Risk Areas",
+    "description": "Flags high transaction volume or count in high-risk jurisdictions over a set period.",
+    "threshold": 0.9,
+    "evaluations": [
+      {
+        "name": "High_Risk_Country_Check",
+        "type": "comparison",
+        "left": "transaction.country",
+        "operator": "IN",
+        "right": "highrisk.country",
+        "weight": 5
+      },
+      {
+        "name": "Transaction_Volume_Check",
+        "type": "aggregation",
+        "aggregation": "COUNT",
+        "field": "transaction.id",
+        "conditions": {
+          "type": "comparison",
+          "left": "datetime(transaction.timestamp)",
+          "operator": ">=",
+          "right": "datetime(now, '-1 day')"
+        },
+        "weight": 4
+      },
+      {
+        "name": "Volume_Threshold_Exceeded",
+        "type": "comparison",
+        "left": "@Transaction_Volume_Check",
+        "operator": ">",
+        "right": 20,
+        "weight": 4
+      }
+    ],
+    "actions": [
+      {
+        "type": "alert_team",
+        "reason": "High transaction volume detected in high-risk jurisdiction within a set time frame."
+      }
+    ]
+  }
+  

@@ -1,0 +1,46 @@
+{
+    "model_id": "R002",
+    "name": "Cross-Border High-Risk Transactions",
+    "description": "Flags cross-border transactions, especially with PEPs or high-risk jurisdictions, and monitors new beneficiary transactions.",
+    "threshold": 0.9,
+    "evaluations": [
+      {
+        "name": "Cross_Border_Transaction",
+        "type": "comparison",
+        "left": "transaction.location",
+        "operator": "!=",
+        "right": "profile.country",
+        "weight": 5
+      },
+      {
+        "name": "PEP_Status_Check",
+        "type": "comparison",
+        "left": "transaction.pep",
+        "operator": "==",
+        "right": "true",
+        "weight": 4
+      },
+      {
+        "name": "High_Risk_Jurisdiction_Check",
+        "type": "comparison",
+        "left": "transaction.country",
+        "operator": "IN",
+        "right": "highrisk.country",
+        "weight": 4
+      },
+      {
+        "name": "New_Beneficiary_Check",
+        "type": "comparison",
+        "left": "transaction.beneficiary_id",
+        "operator": "NOT IN",
+        "right": "profile.previous_beneficiaries",
+        "weight": 3
+      }
+    ],
+    "actions": [
+      {
+        "type": "flag_transaction",
+        "reason": "Cross-border high-risk transaction with additional checks for PEPs and new beneficiaries."
+      }
+    ]
+  }  
