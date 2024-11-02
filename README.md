@@ -70,6 +70,16 @@ Here is an example of an **LROL rule** for detecting high-value transactions ini
       "operator": "<=",
       "right": 30,
       "weight": 3
+    },
+    {
+      "name": "High_Risk_Transaction_Logic",
+      "type": "logical",
+      "operator": "AND",
+      "operands": [
+        "Transaction_Amount_Check",
+        "Account_Age_Check"
+      ],
+      "weight": 5
     }
   ],
   "actions": [
