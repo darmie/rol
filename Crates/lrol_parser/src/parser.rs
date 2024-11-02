@@ -10,6 +10,7 @@ use nom::{
     sequence::{delimited, pair, tuple},
     Err as NomErr, IResult,
 };
+use serde::{Deserialize, Serialize};
 
 use crate::{error::{
     convert_nom_error, syntax_error, ParserError, INVALID_EVAL_TYPE, INVALID_LOGICAL_OP,
@@ -17,7 +18,7 @@ use crate::{error::{
     MISSING_OPERATOR, MISSING_RIGHT, MISSING_TYPE,
 }, types::{Action, Evaluation, EvaluationType, Value}};
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, Serialize, Deserialize, PartialEq)]
 pub struct LrolModel {
     pub model_id: String,
     pub name: String,
