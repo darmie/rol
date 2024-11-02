@@ -63,6 +63,28 @@ Run tests with output:
 cargo test -- --nocapture
 ```
 
+## Running Parser From LROL CLI
+The binary can be found in the `/bin` directory of the repository.  
+
+To run the command:
+
+```bash
+# Create an alias for convenience , replace ${path_to_repo} with the absolute path to lrol project
+alias lrol="${path_to_repo}/bin/lrol"
+
+# Parse a file with JSON output
+lrol parse -f input.json -o json
+
+# Parse with verbose text output
+lrol parse -f input.json -v
+
+# Validate a file
+lrol validate -f input.json
+
+# Validate with detailed error messages
+lrol validate -f input.json -v
+```
+
 ### Test Organization
 
 Tests are categorized into:
