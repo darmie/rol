@@ -1,13 +1,13 @@
-{
+  {
     "model_id": "R002",
     "name": "Cross-Border High-Risk Transactions",
-    "description": "Flags cross-border transactions, especially with PEPs or high-risk jurisdictions, and monitors new beneficiary transactions.",
+    "description": "Flags cross-border transactions, especially when involving politically exposed persons (PEPs) or high-risk jurisdictions, and monitors for cross-border payments to new beneficiaries.",
     "threshold": 0.9,
     "evaluations": [
       {
         "name": "Cross_Border_Transaction",
         "type": "comparison",
-        "left": "transaction.location",
+        "left": "geo_location",
         "operator": "!=",
         "right": "profile.country",
         "weight": 5
@@ -15,32 +15,45 @@
       {
         "name": "PEP_Status_Check",
         "type": "comparison",
-        "left": "transaction.pep",
+        "left": "pep",
         "operator": "==",
-        "right": "true",
+        "right": true,
         "weight": 4
       },
       {
         "name": "High_Risk_Jurisdiction_Check",
         "type": "comparison",
-        "left": "transaction.country",
+        "left": "geo_location",
         "operator": "IN",
-        "right": "highrisk.country",
+        "right": "highrisk.country",  
         "weight": 4
       },
       {
         "name": "New_Beneficiary_Check",
         "type": "comparison",
-        "left": "transaction.beneficiary_id",
+        "left": "beneficiary_account_number",
         "operator": "NOT IN",
-        "right": "profile.previous_beneficiaries",
+        "right": "beneficiary.id",
         "weight": 3
+      },
+      {
+        "name": "Cross_Border_High_Risk_Logic",
+        "type": "logical",
+        "operator": "OR",
+        "operands": [
+          "Cross_Border_Transaction",
+          "PEP_Status_Check",
+          "High_Risk_Jurisdiction_Check",
+          "New_Beneficiary_Check"
+        ],
+        "weight": 5
       }
     ],
     "actions": [
       {
         "type": "flag_transaction",
-        "reason": "Cross-border high-risk transaction with additional checks for PEPs and new beneficiaries."
+        "reason": "Cross-border high-risk transaction detected, involving PEP or high-risk jurisdiction, or new beneficiary."
       }
     ]
-  }  
+  }
+  

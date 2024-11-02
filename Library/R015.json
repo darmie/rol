@@ -1,49 +1,74 @@
 {
-    "model_id": "R015",
-    "name": "High Transaction Count or Value in Specific Industries",
-    "description": "Flags high transaction counts or values involving high-risk industries like gambling or cryptocurrency exchanges.",
-    "threshold": 0.9,
-    "evaluations": [
-      {
-        "name": "High_Risk_Industry_Check",
+  "model_id": "R015",
+  "name": "High Transaction Count or Value in Specific Industries",
+  "description": "Flags high transaction counts or cumulative values involving high-risk industries such as gambling or cryptocurrency exchanges.",
+  "threshold": 0.9,
+  "evaluations": [
+    {
+      "name": "High_Risk_Industry_Check",
+      "type": "comparison",
+      "left": "industry",
+      "operator": "IN",
+      "right": ["Gambling", "Crypto", "Cash_Advance"],
+      "weight": 5
+    },
+    {
+      "name": "Industry_Transaction_Count",
+      "type": "aggregation",
+      "aggregation": "COUNT",
+      "field": "transaction_id",
+      "conditions": {
         "type": "comparison",
         "left": "industry",
         "operator": "IN",
-        "right": ["Gambling", "Crypto", "Cash_Advance"],
-        "weight": 5
+        "right": ["Gambling", "Crypto", "Cash_Advance"]
       },
-      {
-        "name": "Industry_Transaction_Count",
-        "type": "aggregation",
-        "aggregation": "COUNT",
-        "field": "transaction_id",
-        "conditions": {
-          "type": "comparison",
-          "left": "industry",
-          "operator": "IN",
-          "right": ["Gambling", "Crypto", "Cash_Advance"]
-        },
-        "weight": 4
+      "weight": 4
+    },
+    {
+      "name": "Transaction_Count_Threshold_Exceeded",
+      "type": "comparison",
+      "left": "@Industry_Transaction_Count",
+      "operator": ">",
+      "right": 15,  
+      "weight": 4
+    },
+    {
+      "name": "High_Industry_Transaction_Value",
+      "type": "aggregation",
+      "aggregation": "SUM",
+      "field": "amount",
+      "conditions": {
+        "type": "comparison",
+        "left": "industry",
+        "operator": "IN",
+        "right": ["Gambling", "Crypto", "Cash_Advance"]
       },
-      {
-        "name": "High_Industry_Transaction_Value",
-        "type": "aggregation",
-        "aggregation": "SUM",
-        "field": "amount",
-        "conditions": {
-          "type": "comparison",
-          "left": "industry",
-          "operator": "IN",
-          "right": ["Gambling", "Crypto", "Cash_Advance"]
-        },
-        "weight": 4
-      }
-    ],
-    "actions": [
-      {
-        "type": "alert_team",
-        "reason": "High transaction count or value detected in high-risk industries."
-      }
-    ]
-  }
-  
+      "weight": 4
+    },
+    {
+      "name": "Transaction_Value_Threshold_Exceeded",
+      "type": "comparison",
+      "left": "@High_Industry_Transaction_Value",
+      "operator": ">",
+      "right": 50000, 
+      "weight": 4
+    },
+    {
+      "name": "High_Risk_Industry_Logic",
+      "type": "logical",
+      "operator": "OR",
+      "operands": [
+        "Transaction_Count_Threshold_Exceeded",
+        "Transaction_Value_Threshold_Exceeded"
+      ],
+      "weight": 5
+    }
+  ],
+  "actions": [
+    {
+      "type": "alert_team",
+      "reason": "High transaction count or cumulative value detected in high-risk industries."
+    }
+  ]
+}

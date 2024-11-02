@@ -1,52 +1,61 @@
 {
-    "model_id": "R012",
-    "name": "High Transaction Volume for New or Recently Inactive Accounts",
-    "description": "Flags high transaction volumes or values for new or recently reactivated accounts within a short period.",
-    "threshold": 0.9,
-    "evaluations": [
-      {
-        "name": "Recent_Account_Creation_Check",
+  "model_id": "R012",
+  "name": "High Transaction Volume for New or Recently Inactive Accounts",
+  "description": "Flags high transaction volumes or values for new or recently reactivated accounts within a short period.",
+  "threshold": 0.9,
+  "evaluations": [
+    {
+      "name": "Recent_Account_Creation_Check",
+      "type": "comparison",
+      "left": "timediff(now, profile.account_created)",
+      "operator": "<=",
+      "right": "30 days",
+      "weight": 5
+    },
+    {
+      "name": "Recent_Account_Reactivation_Check",
+      "type": "comparison",
+      "left": "timediff(now, profile.last_active)",
+      "operator": ">=",
+      "right": "180 days",
+      "weight": 3
+    },
+    {
+      "name": "High_Transaction_Volume_Check",
+      "type": "aggregation",
+      "aggregation": "SUM",
+      "field": "amount",
+      "conditions": {
         "type": "comparison",
-        "left": "timediff(now, profile.accountCreated)",
-        "operator": "<=",
-        "right": "30",
-        "weight": 5
-      },
-      {
-        "name": "Recent_Account_Reactivation_Check",
-        "type": "comparison",
-        "left": "timediff(now, profile.last_active)",
+        "left": "transaction_date",
         "operator": ">=",
-        "right": "180",
-        "weight": 3
+        "right": "datetime(now, '-1 day')"
       },
-      {
-        "name": "High_Transaction_Volume_Check",
-        "type": "aggregation",
-        "aggregation": "SUM",
-        "field": "transaction.amount",
-        "conditions": {
-          "type": "comparison",
-          "left": "datetime(transaction.timestamp)",
-          "operator": ">=",
-          "right": "datetime(now, '-1 day')"
-        },
-        "weight": 4
-      },
-      {
-        "name": "Volume_Threshold_Exceeded",
-        "type": "comparison",
-        "left": "@High_Transaction_Volume_Check",
-        "operator": ">",
-        "right": 20000,
-        "weight": 4
-      }
-    ],
-    "actions": [
-      {
-        "type": "flag_transaction",
-        "reason": "High transaction volume detected for a new or recently reactivated account."
-      }
-    ]
-  }
-  
+      "weight": 4
+    },
+    {
+      "name": "Volume_Threshold_Exceeded",
+      "type": "comparison",
+      "left": "@High_Transaction_Volume_Check",
+      "operator": ">",
+      "right": "20000", 
+      "weight": 4
+    },
+    {
+      "name": "New_Or_Inactive_Account_High_Risk_Logic",
+      "type": "logical",
+      "operator": "AND",
+      "operands": [
+        "Recent_Account_Creation_Check",
+        "Volume_Threshold_Exceeded"
+      ],
+      "weight": 5
+    }
+  ],
+  "actions": [
+    {
+      "type": "flag_transaction",
+      "reason": "High transaction volume detected for a new or recently reactivated account."
+    }
+  ]
+}

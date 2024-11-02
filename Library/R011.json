@@ -1,31 +1,40 @@
 {
-    "model_id": "R011",
-    "name": "Unverified or High-Risk Beneficiary",
-    "description": "Flags transactions to beneficiaries who are either unverified or marked as high risk due to unusual past activity.",
-    "threshold": 0.9,
-    "evaluations": [
-      {
-        "name": "Beneficiary_Verification_Check",
-        "type": "comparison",
-        "left": "transaction.beneficiary_id",
-        "operator": "IN",
-        "right": "destination.unverified",
-        "weight": 5
-      },
-      {
-        "name": "High_Risk_Beneficiary_Check",
-        "type": "comparison",
-        "left": "transaction.beneficiary_id",
-        "operator": "IN",
-        "right": "blacklist.beneficiaries",
-        "weight": 4
-      }
-    ],
-    "actions": [
-      {
-        "type": "flag_transaction",
-        "reason": "Transaction directed to an unverified or high-risk beneficiary."
-      }
-    ]
-  }
-  
+  "model_id": "R011",
+  "name": "Unverified or High-Risk Beneficiary",
+  "description": "Flags transactions to beneficiaries who are either unverified or marked as high risk due to unusual past activity.",
+  "threshold": 0.9,
+  "evaluations": [
+    {
+      "name": "Unverified_Beneficiary_Check",
+      "type": "comparison",
+      "left": "beneficiary_account_number",
+      "operator": "IN",
+      "right": "profile.unverified_beneficiaries",
+      "weight": 5
+    },
+    {
+      "name": "High_Risk_Beneficiary_Check",
+      "type": "comparison",
+      "left": "beneficiary_account_number",
+      "operator": "IN",
+      "right": "highrisk.beneficiaries",
+      "weight": 4
+    },
+    {
+      "name": "High_Risk_Beneficiary_Logic",
+      "type": "logical",
+      "operator": "OR",
+      "operands": [
+        "Unverified_Beneficiary_Check",
+        "High_Risk_Beneficiary_Check"
+      ],
+      "weight": 5
+    }
+  ],
+  "actions": [
+    {
+      "type": "flag_transaction",
+      "reason": "Transaction directed to an unverified or high-risk beneficiary."
+    }
+  ]
+}

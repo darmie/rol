@@ -1,43 +1,59 @@
 {
   "model_id": "R001",
   "name": "High-Value Transactions",
-  "description": "Flags transactions exceeding a high-value threshold and monitors for rapid withdrawals or transfers post-deposit.",
+  "description": "Flags high-value transactions and monitors for patterns like rapid withdrawals or transfers following large deposits.",
   "threshold": 0.85,
   "evaluations": [
     {
       "name": "High_Value_Transaction_Check",
       "type": "comparison",
-      "left": "transaction.amount",
+      "left": "amount",
       "operator": ">=",
       "right": 10000,
       "weight": 5
     },
     {
-      "name": "Recent_Large_Transaction_Count",
+      "name": "Recent_Large_Deposits_Count",
       "type": "aggregation",
       "aggregation": "COUNT",
-      "field": "transaction.id",
+      "field": "amount",
       "conditions": {
         "type": "comparison",
-        "left": "transaction.amount",
+        "left": "amount",
         "operator": ">=",
         "right": 5000
       },
       "weight": 4
     },
     {
-      "name": "Rapid_Transfer_After_Deposit",
-      "type": "comparison",
-      "left": "timediff(transaction.timestamp, previous_transaction.timestamp)",
-      "operator": "<=",
-      "right": "10 minutes",
+      "name": "STDDEV_Amount_Check",
+      "type": "aggregation",
+      "aggregation": "STDDEV",
+      "field": "amount",
+      "conditions": {
+        "type": "comparison",
+        "left": "transaction_date",
+        "operator": ">=",
+        "right": "datetime(now, '-1 day')"
+      },
       "weight": 3
+    },
+    {
+      "name": "High_Value_Transaction_Logic",
+      "type": "logical",
+      "operator": "AND",
+      "operands": [
+        "High_Value_Transaction_Check",
+        "Recent_Large_Deposits_Count",
+        "STDDEV_Amount_Check"
+      ],
+      "weight": 5
     }
   ],
   "actions": [
     {
       "type": "flag_transaction",
-      "reason": "High-value transaction detected with additional checks for rapid withdrawals or transfers after deposit."
+      "reason": "High-value transaction detected with additional checks for recent large deposits and standard deviation of amounts."
     }
   ]
 }

@@ -1,49 +1,58 @@
 {
-    "model_id": "R003",
-    "name": "Velocity Increase and Volume Surge",
-    "description": "Alerts if a user suddenly increases transaction volume/frequency or performs frequent small transactions, indicating potential structuring.",
-    "threshold": 0.9,
-    "evaluations": [
-      {
-        "name": "Transaction_Volume_Surge_Check",
-        "type": "aggregation",
-        "aggregation": "COUNT",
-        "field": "transaction.id",
-        "conditions": {
-          "type": "comparison",
-          "left": "datetime(transaction.timestamp)",
-          "operator": ">=",
-          "right": "datetime(now, '-2 hours')"
-        },
-        "weight": 5
-      },
-      {
-        "name": "Frequent_Small_Transaction_Check",
-        "type": "aggregation",
-        "aggregation": "COUNT",
-        "field": "transaction.amount",
-        "conditions": {
-          "type": "comparison",
-          "left": "transaction.amount",
-          "operator": "<",
-          "right": 200
-        },
-        "weight": 4
-      },
-      {
-        "name": "Frequency_Threshold_Exceeded",
+  "model_id": "R003",
+  "name": "Velocity Increase and Volume Surge",
+  "description": "Alerts when a user suddenly increases transaction volume/frequency or performs frequent small transactions, potentially indicating structuring.",
+  "threshold": 0.9,
+  "evaluations": [
+    {
+      "name": "Transaction_Volume_Surge_Check",
+      "type": "aggregation",
+      "aggregation": "COUNT",
+      "field": "transaction_id",
+      "conditions": {
         "type": "comparison",
-        "left": "@Frequent_Small_Transaction_Check",
-        "operator": ">",
-        "right": 10,
-        "weight": 3
-      }
-    ],
-    "actions": [
-      {
-        "type": "alert_team",
-        "reason": "Sudden increase in transaction volume or frequency of small transactions detected, potentially indicating structuring."
-      }
-    ]
-  }
-  
+        "left": "transaction_date",
+        "operator": ">=",
+        "right": "datetime(now, '-2 hours')"
+      },
+      "weight": 5
+    },
+    {
+      "name": "Frequent_Small_Transaction_Check",
+      "type": "aggregation",
+      "aggregation": "COUNT",
+      "field": "amount",
+      "conditions": {
+        "type": "comparison",
+        "left": "amount",
+        "operator": "<",
+        "right": 200
+      },
+      "weight": 4
+    },
+    {
+      "name": "Frequency_Threshold_Exceeded",
+      "type": "comparison",
+      "left": "@Frequent_Small_Transaction_Check",
+      "operator": ">",
+      "right": 10,
+      "weight": 3
+    },
+    {
+      "name": "Velocity_Increase_Logic",
+      "type": "logical",
+      "operator": "OR",
+      "operands": [
+        "Transaction_Volume_Surge_Check",
+        "Frequency_Threshold_Exceeded"
+      ],
+      "weight": 5
+    }
+  ],
+  "actions": [
+    {
+      "type": "alert_team",
+      "reason": "Sudden increase in transaction volume or frequency of small transactions detected, potentially indicating structuring."
+    }
+  ]
+}

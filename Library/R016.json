@@ -1,44 +1,53 @@
 {
-    "model_id": "R016",
-    "name": "Frequent Cross-Border Transactions",
-    "description": "Flags frequent cross-border transactions within a short period, indicating potential international money laundering.",
-    "threshold": 0.9,
-    "evaluations": [
-      {
-        "name": "Cross_Border_Transaction_Check",
+  "model_id": "R016",
+  "name": "Frequent Cross-Border Transactions",
+  "description": "Flags frequent cross-border transactions within a short period, which could indicate potential international money laundering.",
+  "threshold": 0.9,
+  "evaluations": [
+    {
+      "name": "Cross_Border_Transaction_Check",
+      "type": "comparison",
+      "left": "beneficiary_isCrossBorder",
+      "operator": "==",
+      "right": true,
+      "weight": 5
+    },
+    {
+      "name": "Cross_Border_Transaction_Count",
+      "type": "aggregation",
+      "aggregation": "COUNT",
+      "field": "transaction_id",
+      "conditions": {
         "type": "comparison",
-        "left": "transaction.location",
-        "operator": "!=",
-        "right": "profile.country",
-        "weight": 5
+        "left": "beneficiary_isCrossBorder",
+        "operator": "==",
+        "right": true
       },
-      {
-        "name": "Cross_Border_Transaction_Count",
-        "type": "aggregation",
-        "aggregation": "COUNT",
-        "field": "transaction_id",
-        "conditions": {
-          "type": "comparison",
-          "left": "location",
-          "operator": "!=",
-          "right": "profile.country"
-        },
-        "weight": 4
-      },
-      {
-        "name": "Transaction_Frequency_Threshold",
-        "type": "comparison",
-        "left": "@Cross_Border_Transaction_Count",
-        "operator": ">",
-        "right": 5,
-        "weight": 4
-      }
-    ],
-    "actions": [
-      {
-        "type": "flag_transaction",
-        "reason": "Frequent cross-border transactions detected within a short period."
-      }
-    ]
-  }
-  
+      "weight": 4
+    },
+    {
+      "name": "Transaction_Frequency_Threshold",
+      "type": "comparison",
+      "left": "@Cross_Border_Transaction_Count",
+      "operator": ">",
+      "right": 5,  
+      "weight": 4
+    },
+    {
+      "name": "Frequent_Cross_Border_Logic",
+      "type": "logical",
+      "operator": "AND",
+      "operands": [
+        "Cross_Border_Transaction_Check",
+        "Transaction_Frequency_Threshold"
+      ],
+      "weight": 5
+    }
+  ],
+  "actions": [
+    {
+      "type": "flag_transaction",
+      "reason": "Frequent cross-border transactions detected within a short period."
+    }
+  ]
+}

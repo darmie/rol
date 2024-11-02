@@ -1,0 +1,54 @@
+{
+    "model_id": "R017",
+    "name": "Account with History of Failed Transactions",
+    "description": "Monitors entities with repeated failed transactions, which could indicate testing of account details or attempts to exploit vulnerabilities.",
+    "threshold": 0.8,
+    "evaluations": [
+      {
+        "name": "Failed_Transaction_Check",
+        "type": "comparison",
+        "left": "transaction.status",
+        "operator": "==",
+        "right": "failed",
+        "weight": 5
+      },
+      {
+        "name": "Failed_Transaction_Count",
+        "type": "aggregation",
+        "aggregation": "COUNT",
+        "field": "transaction_id",
+        "conditions": {
+          "type": "comparison",
+          "left": "transaction.status",
+          "operator": "==",
+          "right": "failed"
+        },
+        "weight": 4
+      },
+      {
+        "name": "Failed_Transaction_Threshold_Exceeded",
+        "type": "comparison",
+        "left": "@Failed_Transaction_Count",
+        "operator": ">",
+        "right": 3,  
+        "weight": 4
+      },
+      {
+        "name": "Failed_Transaction_Logic",
+        "type": "logical",
+        "operator": "AND",
+        "operands": [
+          "Failed_Transaction_Check",
+          "Failed_Transaction_Threshold_Exceeded"
+        ],
+        "weight": 5
+      }
+    ],
+    "actions": [
+      {
+        "type": "alert_team",
+        "reason": "Multiple failed transactions detected, potentially indicating testing or misuse."
+      }
+    ]
+  }
+  

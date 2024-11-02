@@ -1,37 +1,66 @@
 {
-    "model_id": "R009",
-    "name": "Multi-Currency and Rapid Transactions",
-    "description": "Flags rapid transactions in multiple currencies within a short period, indicating potential layering or currency conversion laundering.",
-    "threshold": 0.9,
-    "evaluations": [
-      {
-        "name": "Multi_Currency_Check",
-        "type": "aggregation",
-        "aggregation": "COUNT",
-        "field": "transaction.currency",
-        "distinct": true,
-        "conditions": {
-          "type": "comparison",
-          "left": "datetime(transaction.timestamp)",
-          "operator": ">=",
-          "right": "datetime(now, '-1 hour')"
-        },
-        "weight": 5
-      },
-      {
-        "name": "Frequency_Within_Time_Window",
+  "model_id": "R009",
+  "name": "Multi-Currency and Rapid Transactions",
+  "description": "Flags rapid transactions in multiple currencies within a short period, indicating potential layering or currency conversion laundering.",
+  "threshold": 0.9,
+  "evaluations": [
+    {
+      "name": "Multi_Currency_Count",
+      "type": "aggregation",
+      "aggregation": "COUNT",
+      "field": "currency",
+      "conditions": {
         "type": "comparison",
-        "left": "@Multi_Currency_Check",
-        "operator": ">",
-        "right": 3,
-        "weight": 4
-      }
-    ],
-    "actions": [
-      {
-        "type": "alert_team",
-        "reason": "Rapid transactions in multiple currencies detected, potentially indicating currency layering or laundering."
-      }
-    ]
-  }
-  
+        "left": "transaction_date",
+        "operator": ">=",
+        "right": "datetime(now, '-1 hour')"
+      },
+      "weight": 5
+    },
+    {
+      "name": "High_Currency_Frequency_Check",
+      "type": "comparison",
+      "left": "@Multi_Currency_Count",
+      "operator": ">",
+      "right": 3,
+      "weight": 4
+    },
+    {
+      "name": "Rapid_Transaction_Frequency_Check",
+      "type": "aggregation",
+      "aggregation": "COUNT",
+      "field": "transaction_id",
+      "conditions": {
+        "type": "comparison",
+        "left": "transaction_date",
+        "operator": ">=",
+        "right": "datetime(now, '-1 hour')"
+      },
+      "weight": 4
+    },
+    {
+      "name": "Frequency_Threshold_Exceeded",
+      "type": "comparison",
+      "left": "@Rapid_Transaction_Frequency_Check",
+      "operator": ">",
+      "right": 10,
+      "weight": 4
+    },
+    {
+      "name": "Multi_Currency_Rapid_Transactions_Logic",
+      "type": "logical",
+      "operator": "AND",
+      "operands": [
+        "High_Currency_Frequency_Check",
+        "Frequency_Threshold_Exceeded"
+      ],
+      "weight": 5
+    }
+  ],
+  "actions": [
+    {
+      "type": "alert_team",
+      "reason": "Rapid transactions in multiple currencies detected, potentially indicating currency layering or laundering."
+    }
+  ]
+}

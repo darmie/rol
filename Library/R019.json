@@ -1,0 +1,76 @@
+{
+    "model_id": "R019",
+    "name": "Rapid Successive Payments to Different Beneficiaries",
+    "description": "Flags multiple payments made in quick succession to different beneficiaries, indicating potential fraud or money laundering through layering.",
+    "threshold": 0.9,
+    "evaluations": [
+      {
+        "name": "Transaction_Type_Payment_Check",
+        "type": "comparison",
+        "left": "transaction_type",
+        "operator": "==",
+        "right": "PAYMENT",
+        "weight": 5
+      },
+      {
+        "name": "Recent_Payment_Count",
+        "type": "aggregation",
+        "aggregation": "COUNT",
+        "field": "transaction_id",
+        "conditions": {
+          "type": "comparison",
+          "left": "transaction_date",
+          "operator": ">=",
+          "right": "datetime(now, '-10 minutes')"
+        },
+        "weight": 4
+      },
+      {
+        "name": "High_Frequency_Threshold_Exceeded",
+        "type": "comparison",
+        "left": "@Recent_Payment_Count",
+        "operator": ">",
+        "right": 3, 
+        "weight": 4
+      },
+      {
+        "name": "Different_Beneficiaries_Check",
+        "type": "aggregation",
+        "aggregation": "COUNT",
+        "field": "beneficiary_account_number",
+        "conditions": {
+          "type": "comparison",
+          "left": "transaction_date",
+          "operator": ">=",
+          "right": "datetime(now, '-10 minutes')"
+        },
+        "weight": 4
+      },
+      {
+        "name": "Distinct_Beneficiary_Threshold_Exceeded",
+        "type": "comparison",
+        "left": "@Different_Beneficiaries_Check",
+        "operator": ">",
+        "right": 2,  
+        "weight": 4
+      },
+      {
+        "name": "Rapid_Successive_Payments_Logic",
+        "type": "logical",
+        "operator": "AND",
+        "operands": [
+          "Transaction_Type_Payment_Check",
+          "High_Frequency_Threshold_Exceeded",
+          "Distinct_Beneficiary_Threshold_Exceeded"
+        ],
+        "weight": 5
+      }
+    ],
+    "actions": [
+      {
+        "type": "flag_transaction",
+        "reason": "Multiple rapid payments to different beneficiaries detected, indicating potential layering."
+      }
+    ]
+  }
+  

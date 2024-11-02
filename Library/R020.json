@@ -1,0 +1,58 @@
+{
+    "model_id": "R020",
+    "name": "Unusual Increase in Daily Transaction Volume",
+    "description": "Flags a sudden increase in daily transaction volume compared to the entity's recent average, indicating potential abnormal account activity.",
+    "threshold": 0.85,
+    "evaluations": [
+      {
+        "name": "Current_Day_Transaction_Volume",
+        "type": "aggregation",
+        "aggregation": "SUM",
+        "field": "amount",
+        "conditions": {
+          "type": "comparison",
+          "left": "transaction_date",
+          "operator": ">=",
+          "right": "datetime(now, 'start of day')"
+        },
+        "weight": 4
+      },
+      {
+        "name": "Recent_Average_Daily_Volume",
+        "type": "aggregation",
+        "aggregation": "AVG",
+        "field": "amount",
+        "conditions": {
+          "type": "comparison",
+          "left": "transaction_date",
+          "operator": ">=",
+          "right": "datetime(now, '-7 days')"
+        },
+        "weight": 4
+      },
+      {
+        "name": "Volume_Exceeds_Average_By_Threshold",
+        "type": "comparison",
+        "left": "@Current_Day_Transaction_Volume",
+        "operator": ">",
+        "right": "@Recent_Average_Daily_Volume * 2", 
+        "weight": 5
+      },
+      {
+        "name": "Unusual_Volume_Increase_Logic",
+        "type": "logical",
+        "operator": "AND",
+        "operands": [
+          "Volume_Exceeds_Average_By_Threshold"
+        ],
+        "weight": 5
+      }
+    ],
+    "actions": [
+      {
+        "type": "alert_team",
+        "reason": "Significant increase in daily transaction volume detected, potentially indicating unusual account activity."
+      }
+    ]
+  }
+  

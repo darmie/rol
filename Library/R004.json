@@ -1,44 +1,53 @@
 {
-    "model_id": "R004",
-    "name": "Frequent Small Transactions",
-    "description": "Monitors frequent small transactions (e.g., <$200) within a short period to detect structuring.",
-    "threshold": 0.85,
-    "evaluations": [
-      {
-        "name": "Small_Transaction_Check",
+  "model_id": "R004",
+  "name": "New Account with High-Risk Activity",
+  "description": "Flags transactions from accounts created within the last 30 days, especially if there’s high transaction volume or amounts above the entity's profile threshold.",
+  "threshold": 0.85,
+  "evaluations": [
+    {
+      "name": "Account_Age_Check",
+      "type": "comparison",
+      "left": "timediff(now, profile.account_created)",
+      "operator": "<=",
+      "right": "30 days",
+      "weight": 5
+    },
+    {
+      "name": "High_Transaction_Volume_Check",
+      "type": "aggregation",
+      "aggregation": "SUM",
+      "field": "amount",
+      "conditions": {
         "type": "comparison",
-        "left": "transaction.amount",
-        "operator": "<",
-        "right": 200,
-        "weight": 3
+        "left": "transaction_date",
+        "operator": ">=",
+        "right": "datetime(now, '-1 day')"
       },
-      {
-        "name": "Recent_Small_Transaction_Count",
-        "type": "aggregation",
-        "aggregation": "COUNT",
-        "field": "transaction.id",
-        "conditions": {
-          "type": "comparison",
-          "left": "transaction.amount",
-          "operator": "<",
-          "right": 200
-        },
-        "weight": 5
-      },
-      {
-        "name": "Frequency_Within_Time_Window",
-        "type": "comparison",
-        "left": "@Recent_Small_Transaction_Count",
-        "operator": ">",
-        "right": 10,
-        "weight": 4
-      }
-    ],
-    "actions": [
-      {
-        "type": "flag_transaction",
-        "reason": "Detected frequent small transactions within a short period, potentially indicating structuring."
-      }
-    ]
-  }
-  
+      "weight": 4
+    },
+    {
+      "name": "Entity_Profile_Threshold_Exceeded",
+      "type": "comparison",
+      "left": "@High_Transaction_Volume_Check",
+      "operator": ">",
+      "right": "profile.amountThreshold",
+      "weight": 4
+    },
+    {
+      "name": "New_Account_High_Risk_Logic",
+      "type": "logical",
+      "operator": "AND",
+      "operands": [
+        "Account_Age_Check",
+        "Entity_Profile_Threshold_Exceeded"
+      ],
+      "weight": 5
+    }
+  ],
+  "actions": [
+    {
+      "type": "flag_transaction",
+      "reason": "Transaction from a recently created account with high transaction volume or amount above profile threshold."
+    }
+  ]
+}

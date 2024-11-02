@@ -1,0 +1,41 @@
+{
+    "model_id": "R018",
+    "name": "Large Transactions Outside Business Hours",
+    "description": "Flags large transactions that occur outside of typical business hours, potentially indicating unauthorized access or account compromise.",
+    "threshold": 0.85,
+    "evaluations": [
+      {
+        "name": "Large_Transaction_Check",
+        "type": "comparison",
+        "left": "amount",
+        "operator": ">=",
+        "right": 10000,  
+        "weight": 5
+      },
+      {
+        "name": "Outside_Business_Hours_Check",
+        "type": "comparison",
+        "left": "strftime('%H', transaction_date)",
+        "operator": "IN",
+        "right": ["00", "01", "02", "03", "04", "05", "22", "23"],  
+        "weight": 4
+      },
+      {
+        "name": "Large_Transaction_Outside_Hours_Logic",
+        "type": "logical",
+        "operator": "AND",
+        "operands": [
+          "Large_Transaction_Check",
+          "Outside_Business_Hours_Check"
+        ],
+        "weight": 5
+      }
+    ],
+    "actions": [
+      {
+        "type": "flag_transaction",
+        "reason": "Large transaction detected outside of business hours, indicating potential unauthorized access."
+      }
+    ]
+  }
+  

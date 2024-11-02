@@ -1,23 +1,53 @@
 {
-    "model_id": "R005",
-    "name": "Recently Created Account Transaction",
-    "description": "Flags transactions from accounts created within the last 30 days.",
-    "threshold": 0.8,
-    "evaluations": [
-      {
-        "name": "Account_Age_Check",
+  "model_id": "R005",
+  "name": "Entity-Specific Profile Limits and Thresholds",
+  "description": "Flags transactions exceeding entity-specific thresholds, such as daily volume limits, or transactions above the profile's amount threshold.",
+  "threshold": 0.85,
+  "evaluations": [
+    {
+      "name": "Transaction_Above_Profile_Threshold",
+      "type": "comparison",
+      "left": "amount",
+      "operator": ">",
+      "right": "profile.amountThreshold",
+      "weight": 5
+    },
+    {
+      "name": "Daily_Volume_Limit_Check",
+      "type": "aggregation",
+      "aggregation": "SUM",
+      "field": "amount",
+      "conditions": {
         "type": "comparison",
-        "left": "timediff(now, profile.accountCreated)",
-        "operator": "<=",
-        "right": "30 days",
-        "weight": 5
-      }
-    ],
-    "actions": [
-      {
-        "type": "flag_transaction",
-        "reason": "Transaction from a recently created account (less than 30 days old)."
-      }
-    ]
-  }
-  
+        "left": "transaction_date",
+        "operator": ">=",
+        "right": "datetime(now, '-1 day')"
+      },
+      "weight": 4
+    },
+    {
+      "name": "Daily_Volume_Threshold_Exceeded",
+      "type": "comparison",
+      "left": "@Daily_Volume_Limit_Check",
+      "operator": ">",
+      "right": "profile.dailyVolumeLimit",
+      "weight": 4
+    },
+    {
+      "name": "Profile_Limits_Logic",
+      "type": "logical",
+      "operator": "OR",
+      "operands": [
+        "Transaction_Above_Profile_Threshold",
+        "Daily_Volume_Threshold_Exceeded"
+      ],
+      "weight": 5
+    }
+  ],
+  "actions": [
+    {
+      "type": "flag_transaction",
+      "reason": "Transaction exceeds entity-specific thresholds, such as amount or daily volume limit."
+    }
+  ]
+}
