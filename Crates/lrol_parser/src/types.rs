@@ -1,6 +1,8 @@
 use std::str::FromStr;
 
-#[derive(Debug, PartialEq)]
+use serde::{Deserialize, Serialize};
+
+#[derive(Debug,Serialize, Deserialize, PartialEq)]
 pub struct Evaluation {
     pub name: String,
     pub evaluation_type: EvaluationType,
@@ -11,7 +13,7 @@ pub struct Evaluation {
     pub weight: Option<i32>,
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, Serialize, Deserialize, PartialEq)]
 pub enum EvaluationType {
     Comparison,
     Logical,
@@ -35,13 +37,13 @@ impl FromStr for EvaluationType {
     }
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, Serialize, Deserialize, PartialEq)]
 pub struct Action {
     pub action_type: String,
     pub reason: String,
 }
 
-#[derive(Debug, PartialEq, Clone)]
+#[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]
 pub enum Value {
     String(String),
     Number(f64),
