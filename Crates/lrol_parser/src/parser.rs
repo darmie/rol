@@ -1,10 +1,12 @@
 use std::str::FromStr;
 
+use nom::bytes::complete::tag;
+use nom::complete::bool as Bool;
 use nom::{
     branch::alt,
     bytes::complete::take_while1,
     character::complete::{char, digit1, multispace0},
-    combinator::{map, map_res, opt, recognize, verify},
+    combinator::{map, map_res, opt, recognize, value, verify},
     error::{context, convert_error, ParseError, VerboseError, VerboseErrorKind},
     multi::separated_list0,
     sequence::{delimited, pair, tuple},
@@ -12,11 +14,14 @@ use nom::{
 };
 use serde::{Deserialize, Serialize};
 
-use crate::{error::{
-    convert_nom_error, syntax_error, ParserError, INVALID_EVAL_TYPE, INVALID_LOGICAL_OP,
-    INVALID_OPERANDS, INVALID_WEIGHT, MISSING_LEFT, MISSING_NAME, MISSING_OPERANDS,
-    MISSING_OPERATOR, MISSING_RIGHT, MISSING_TYPE,
-}, types::{Action, Evaluation, EvaluationType, Value}};
+use crate::{
+    error::{
+        convert_nom_error, syntax_error, ParserError, INVALID_EVAL_TYPE, INVALID_LOGICAL_OP,
+        INVALID_OPERANDS, INVALID_WEIGHT, MISSING_LEFT, MISSING_NAME, MISSING_OPERANDS,
+        MISSING_OPERATOR, MISSING_RIGHT, MISSING_TYPE,
+    },
+    types::{Action, Evaluation, EvaluationType, Value},
+};
 
 #[derive(Debug, Serialize, Deserialize, PartialEq)]
 pub struct LrolModel {
@@ -27,8 +32,6 @@ pub struct LrolModel {
     pub evaluations: Vec<Evaluation>,
     pub actions: Vec<Action>,
 }
-
-
 
 pub struct LrolParser;
 
@@ -92,42 +95,51 @@ impl LrolParser {
                             if let Value::String(v) = value {
                                 model_id = Some(v)
                             } else {
-                                return syntax_error(new_input, "Invalid model_id")
+                                return syntax_error(new_input, "Invalid model_id");
                             }
                         }
                         "name" => {
                             if let Value::String(v) = value {
                                 name = Some(v)
                             } else {
-                                return syntax_error(new_input, "Invalid name")
+                                return syntax_error(new_input, "Invalid name");
                             }
                         }
                         "description" => {
                             if let Value::String(v) = value {
                                 description = Some(v)
-                            }else {
-                                return syntax_error(new_input, "Invalid description")
+                            } else {
+                                return syntax_error(new_input, "Invalid description");
                             }
                         }
                         "threshold" => {
                             if let Value::Number(v) = value {
                                 threshold = Some(v)
                             } else {
-                                return syntax_error(new_input, "Invalid threshold type: expected Number")
+                                return syntax_error(
+                                    new_input,
+                                    "Invalid threshold type: expected Number",
+                                );
                             }
                         }
                         "evaluations" => {
                             if let Value::Array(v) = value {
                                 evaluations = Some(v);
                             } else {
-                                return syntax_error(new_input, "Invalid evaluations type: expected array")
+                                return syntax_error(
+                                    new_input,
+                                    "Invalid evaluations type: expected array",
+                                );
                             }
                         }
                         "actions" => {
                             if let Value::Array(v) = value {
                                 actions = Some(v);
                             } else {
-                                return syntax_error(new_input, "Invalid actions type: expected array")
+                                return syntax_error(
+                                    new_input,
+                                    "Invalid actions type: expected array",
+                                );
                             }
                         }
                         _ => {}
@@ -175,6 +187,7 @@ impl LrolParser {
             alt((
                 map(Self::parse_string, Value::String),
                 map(Self::parse_number, Value::Number),
+                map(Self::parse_boolean, Value::Bool),
                 map(Self::parse_array, Value::Array),
                 map(Self::parse_object_value, Value::Object),
             )),
@@ -226,6 +239,16 @@ impl LrolParser {
                 opt(pair(char('.'), digit1)),
             ))),
             |s: &str| s.parse::<f64>(),
+        )(input)
+    }
+
+    fn parse_boolean(input: &str) -> IResult<&str, bool, VerboseError<&str>> {
+        context(
+            "boolean",
+            alt((
+                map(tag("true"), |_| true),
+                map(tag("false"), |_| false),
+            ))
         )(input)
     }
 
@@ -365,10 +388,7 @@ impl LrolParser {
 
     // Helper method to parse a single evaluation
     fn parse_single_evaluation(input: &str) -> IResult<&str, Evaluation, VerboseError<&str>> {
-        let (remaining, fields) = context(
-            "evaluation object",
-            Self::parse_object_value
-        )(input)?;
+        let (remaining, fields) = context("evaluation object", Self::parse_object_value)(input)?;
 
         Self::parse_evaluation_from_fields(remaining, &fields)
     }
