@@ -1,0 +1,10 @@
+[package]
+name = "lrol_parser"
+version = "0.1.0"
+edition = "2021"
+authors = ["Damilare Akinlaja"]
+
+[dependencies]
+nom = "7.1.3"
+serde = {workspace = true}
+serde_json = {workspace = true}
