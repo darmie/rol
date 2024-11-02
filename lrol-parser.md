@@ -64,7 +64,7 @@ cargo test -- --nocapture
 ```
 
 ## Running Parser From LROL CLI
-The binary can be found in the `/bin` directory of the repository.  
+Run `make build` from the root directory, it will build the CLI crate. Afterwards, the binary will be found in the `/bin` directory of the repository.  
 
 To run the command:
 
