@@ -50,7 +50,7 @@ impl std::error::Error for ParserError {}
 pub type ParserResult<T> = Result<T, ParserError>;
 
 // Helper function to get line and column from input and position
-fn get_error_position(full_input: &str, error_input: &str) -> (usize, usize) {
+pub(crate) fn get_error_position(full_input: &str, error_input: &str) -> (usize, usize) {
     // Calculate the offset where the error occurred
     let offset = full_input.len() - error_input.len();
     let mut line = 1;
@@ -74,15 +74,19 @@ fn get_error_position(full_input: &str, error_input: &str) -> (usize, usize) {
 // Helper function to convert nom error to our custom error
 pub fn convert_nom_error(full_input: &str, e: VerboseError<&str>) -> ParserError {
     // Find the last (most specific) error
-    let error = e.errors.last().map(|(error_input, kind)| {
-        let (line, column) = get_error_position(full_input, error_input);
-        let message = match kind {
-            VerboseErrorKind::Char(c) => format!("Unexpected character: '{}'", c),
-            VerboseErrorKind::Context(ctx) => format!("Error in context: {}", ctx),
-            VerboseErrorKind::Nom(kind) => format!("Parse error: {:?}", kind),
-        };
-        (line, column, message)
-    }).unwrap_or((1, 1, "Unknown parse error".to_string()));
+    let error = e
+        .errors
+        .last()
+        .map(|(error_input, kind)| {
+            let (line, column) = get_error_position(full_input, error_input);
+            let message = match kind {
+                VerboseErrorKind::Char(c) => format!("Unexpected character: '{}'", c),
+                VerboseErrorKind::Context(ctx) => format!("Error in context: {}", ctx),
+                VerboseErrorKind::Nom(kind) => format!("Parse error: {:?}", kind),
+            };
+            (line, column, message)
+        })
+        .unwrap_or((1, 1, "Unknown parse error".to_string()));
 
     ParserError::InvalidSyntax {
         line: error.0,
@@ -90,3 +94,23 @@ pub fn convert_nom_error(full_input: &str, e: VerboseError<&str>) -> ParserError
         message: error.2,
     }
 }
+
+pub fn syntax_error<'a, T>(
+    error_input: &'a str,
+    message: &'static str,
+) -> nom::IResult<&'a str, T, VerboseError<&'a str>> {
+    Err(nom::Err::Error(VerboseError {
+        errors: vec![(error_input, VerboseErrorKind::Context(message))],
+    }))
+}
+
+pub (crate) const INVALID_EVAL_TYPE: &'static str = "Invalid evaluation type";
+pub (crate) const INVALID_LOGICAL_OP: &'static str = "Invalid logical operator, expected 'AND' or 'OR'";
+pub (crate) const INVALID_OPERANDS: &'static str = "Operands must be an array of strings";
+pub (crate) const INVALID_WEIGHT: &'static str = "Weight must be a number";
+pub (crate) const MISSING_NAME: &'static str = "Missing required field 'name'";
+pub (crate) const MISSING_TYPE: &'static str = "Missing required field 'type'";
+pub (crate) const MISSING_OPERANDS: &'static str = "Logical evaluation requires 'operands' field";
+pub (crate) const MISSING_OPERATOR: &'static str = "Logical evaluation requires 'operator' field";
+pub (crate) const MISSING_LEFT: &'static str = "Comparison evaluation requires 'left' field";
+pub (crate) const MISSING_RIGHT: &'static str = "Comparison evaluation requires 'right' field";
