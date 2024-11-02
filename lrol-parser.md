@@ -55,7 +55,7 @@ cargo test
 
 Run specific test:
 ```bash
-cargo test parser::tests::test_parse_logical_evaluation
+cargo test parser::tests::test_parse_readme_example
 ```
 
 Run tests with output:
