@@ -47,6 +47,7 @@ pub struct Action {
 pub enum Value {
     String(String),
     Number(f64),
+    Bool(bool),
     Array(Vec<Value>),
     Object(Vec<(String, Value)>),
 }
