@@ -28,6 +28,16 @@ Detects high-value cross-border payments that could indicate potential fraud.
       "operator": "IN",
       "right": ["Country_X", "Country_Y"],
       "weight": 3
+    },
+    {
+      "name": "High_Risk_Transaction_Logic",
+      "type": "logical",
+      "operator": "AND",
+      "operands": [
+        "Amount_Check",
+        "Country_Check"
+      ],
+      "weight": 5
     }
   ],
   "actions": [
@@ -74,6 +84,16 @@ Monitors the frequency of transactions within a short timeframe to detect abnorm
       "operator": ">",
       "right": 5000,
       "weight": 3
+    },
+    {
+      "name": "High_Velocity_Logic",
+      "type": "logical",
+      "operator": "AND",
+      "operands": [
+        "Transaction_Sum",
+        "Sum_Check"
+      ],
+      "weight": 5
     }
   ],
   "actions": [
