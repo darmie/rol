@@ -1,13 +1,12 @@
 use std::str::FromStr;
 
 use nom::bytes::complete::tag;
-use nom::complete::bool as Bool;
 use nom::{
     branch::alt,
     bytes::complete::take_while1,
     character::complete::{char, digit1, multispace0},
-    combinator::{map, map_res, opt, recognize, value, verify},
-    error::{context, convert_error, ParseError, VerboseError, VerboseErrorKind},
+    combinator::{map, map_res, opt, recognize},
+    error::{context, convert_error, VerboseError},
     multi::separated_list0,
     sequence::{delimited, pair, tuple},
     Err as NomErr, IResult,
@@ -59,20 +58,6 @@ impl LrolParser {
         let (input, _) = char('}')(input)?;
         let (input, _) = multispace0(input)?;
         Ok((input, model))
-    }
-
-    // Generic object parser
-    fn parse_object<F, T>(content_parser: F) -> impl Fn(&str) -> IResult<&str, T>
-    where
-        F: Fn(&str) -> IResult<&str, T> + Copy,
-    {
-        move |input: &str| {
-            delimited(
-                char('{'),
-                delimited(multispace0, content_parser, multispace0),
-                char('}'),
-            )(input)
-        }
     }
 
     fn parse_model_contents(mut input: &str) -> IResult<&str, LrolModel, VerboseError<&str>> {
@@ -245,10 +230,7 @@ impl LrolParser {
     fn parse_boolean(input: &str) -> IResult<&str, bool, VerboseError<&str>> {
         context(
             "boolean",
-            alt((
-                map(tag("true"), |_| true),
-                map(tag("false"), |_| false),
-            ))
+            alt((map(tag("true"), |_| true), map(tag("false"), |_| false))),
         )(input)
     }
 
@@ -274,7 +256,7 @@ impl LrolParser {
             .into_iter()
             .filter_map(|v| {
                 if let Value::Object(fields) = v {
-                    if let Some((_, ev)) = Self::parse_evaluation_from_fields(input, &fields).ok() {
+                    if let Ok((_, ev)) = Self::parse_evaluation_from_fields(input, &fields) {
                         Some(ev)
                     } else {
                         None
@@ -387,7 +369,7 @@ impl LrolParser {
     }
 
     // Helper method to parse a single evaluation
-    fn parse_single_evaluation(input: &str) -> IResult<&str, Evaluation, VerboseError<&str>> {
+    pub fn parse_single_evaluation(input: &str) -> IResult<&str, Evaluation, VerboseError<&str>> {
         let (remaining, fields) = context("evaluation object", Self::parse_object_value)(input)?;
 
         Self::parse_evaluation_from_fields(remaining, &fields)

@@ -1,7 +1,7 @@
-use std::path::PathBuf;
+use anyhow::{Context, Result};
 use clap::{Parser, Subcommand};
 use colored::*;
-use anyhow::{Context, Result};
+use std::path::PathBuf;
 
 #[derive(Parser)]
 #[command(name = "lrol")]
@@ -44,36 +44,36 @@ fn main() -> Result<()> {
     let cli = Cli::parse();
 
     match cli.command {
-        Commands::Parse { file, output, verbose } => {
-            handle_parse(file, &output, verbose)
-        }
-        Commands::Validate { file, verbose } => {
-            handle_validate(file, verbose)
-        }
+        Commands::Parse {
+            file,
+            output,
+            verbose,
+        } => handle_parse(file, &output, verbose),
+        Commands::Validate { file, verbose } => handle_validate(file, verbose),
     }
 }
 
 fn handle_parse(file: PathBuf, output: &str, verbose: bool) -> Result<()> {
     let result = lrol_parser::parse_file(&file)
         .with_context(|| format!("Failed to parse file: {}", file.display()))?;
-    
+
     match output {
         "json" => {
-            let json = serde_json::to_string_pretty(&result)
-                .context("Failed to serialize to JSON")?;
+            let json =
+                serde_json::to_string_pretty(&result).context("Failed to serialize to JSON")?;
             println!("{}", json);
         }
         "text" | _ => {
             print_model_summary(&result, verbose);
         }
     }
-    
+
     Ok(())
 }
 
 fn handle_validate(file: PathBuf, verbose: bool) -> Result<()> {
     println!("{}", "Validating LROL file...".cyan());
-    
+
     match lrol_parser::parse_file(&file) {
         Ok(_) => {
             println!("{}", "✓ File is valid LROL".green().bold());
@@ -101,14 +101,15 @@ fn print_model_summary(model: &lrol_parser::parser::LrolModel, verbose: bool) {
         println!("Description: {}", desc);
     }
     println!("Threshold: {}", model.threshold);
-    
+
     println!("\n{}", "Evaluations:".yellow().bold());
     for eval in &model.evaluations {
-        println!("- {} ({})", 
-            eval.name.bold(), 
+        println!(
+            "- {} ({})",
+            eval.name.bold(),
             format!("{:?}", eval.evaluation_type).to_lowercase()
         );
-        
+
         if verbose {
             if let Some(left) = &eval.left {
                 println!("  Left: {}", left);
@@ -127,13 +128,10 @@ fn print_model_summary(model: &lrol_parser::parser::LrolModel, verbose: bool) {
             }
         }
     }
-    
+
     println!("\n{}", "Actions:".yellow().bold());
     for action in &model.actions {
-        println!("- {} ({})", 
-            action.action_type.bold(), 
-            action.reason
-        );
+        println!("- {} ({})", action.action_type.bold(), action.reason);
     }
 }
 
@@ -143,13 +141,13 @@ use thiserror::Error;
 pub enum CliError {
     #[error("File error: {0}")]
     FileError(#[from] std::io::Error),
-    
+
     #[error("Parser error: {0}")]
     ParseError(#[from] lrol_parser::ParserError),
-    
+
     #[error("Output error: {0}")]
     OutputError(String),
-    
+
     #[error("Invalid output format: {0}")]
     InvalidOutputFormat(String),
 }

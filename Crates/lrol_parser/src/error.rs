@@ -104,13 +104,13 @@ pub fn syntax_error<'a, T>(
     }))
 }
 
-pub (crate) const INVALID_EVAL_TYPE: &'static str = "Invalid evaluation type";
-pub (crate) const INVALID_LOGICAL_OP: &'static str = "Invalid logical operator, expected 'AND' or 'OR'";
-pub (crate) const INVALID_OPERANDS: &'static str = "Operands must be an array of strings";
-pub (crate) const INVALID_WEIGHT: &'static str = "Weight must be a number";
-pub (crate) const MISSING_NAME: &'static str = "Missing required field 'name'";
-pub (crate) const MISSING_TYPE: &'static str = "Missing required field 'type'";
-pub (crate) const MISSING_OPERANDS: &'static str = "Logical evaluation requires 'operands' field";
-pub (crate) const MISSING_OPERATOR: &'static str = "Logical evaluation requires 'operator' field";
-pub (crate) const MISSING_LEFT: &'static str = "Comparison evaluation requires 'left' field";
-pub (crate) const MISSING_RIGHT: &'static str = "Comparison evaluation requires 'right' field";
+pub(crate) const INVALID_EVAL_TYPE: &str = "Invalid evaluation type";
+pub(crate) const INVALID_LOGICAL_OP: &str = "Invalid logical operator, expected 'AND' or 'OR'";
+pub(crate) const INVALID_OPERANDS: &str = "Operands must be an array of strings";
+pub(crate) const INVALID_WEIGHT: &str = "Weight must be a number";
+pub(crate) const MISSING_NAME: &str = "Missing required field 'name'";
+pub(crate) const MISSING_TYPE: &str = "Missing required field 'type'";
+pub(crate) const MISSING_OPERANDS: &str = "Logical evaluation requires 'operands' field";
+pub(crate) const MISSING_OPERATOR: &str = "Logical evaluation requires 'operator' field";
+pub(crate) const MISSING_LEFT: &str = "Comparison evaluation requires 'left' field";
+pub(crate) const MISSING_RIGHT: &str = "Comparison evaluation requires 'right' field";

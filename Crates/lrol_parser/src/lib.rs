@@ -1,5 +1,5 @@
-pub mod parser;
 pub mod error;
+pub mod parser;
 pub mod types;
 
 use std::fs::File;
@@ -22,13 +22,14 @@ pub fn parse_file<P: AsRef<Path>>(path: P) -> ParserResult<parser::LrolModel> {
         column: 0,
         message: format!("Failed to open file: {}", e),
     })?;
-    
+
     let mut content = String::new();
-    file.read_to_string(&mut content).map_err(|e| ParserError::InvalidSyntax {
-        line: 0,
-        column: 0,
-        message: format!("Failed to read file: {}", e),
-    })?;
-    
+    file.read_to_string(&mut content)
+        .map_err(|e| ParserError::InvalidSyntax {
+            line: 0,
+            column: 0,
+            message: format!("Failed to read file: {}", e),
+        })?;
+
     parse_str(&content)
 }

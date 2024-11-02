@@ -2,7 +2,7 @@ use std::str::FromStr;
 
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug,Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Serialize, Deserialize, PartialEq)]
 pub struct Evaluation {
     pub name: String,
     pub evaluation_type: EvaluationType,
