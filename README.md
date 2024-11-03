@@ -98,3 +98,9 @@ Here is an example of an **LROL rule** for detecting high-value transactions ini
 2. **Deploy Rules**: Integrate these rules with your real-time processing system (e.g., Flink, Spark) to evaluate transactions as they happen.
 3. **Evaluate**: Use the rule’s threshold and evaluation scores to determine actions like flagging or blocking suspicious transactions.
 4. **Extend with ML**: Optionally, integrate machine learning-driven scores or anomaly detection features into your LROL evaluations to enhance decision-making.
+
+---
+## Developer Tools & Libries
+1. [**LROL PARSER**](./Crates/lrol_parser/)
+2. [**LROL ANALYZER & VALIDATOR**](./Crates/lrol_analyzer/)
+3. [**LROL CLI**](./lrol-cli.md)

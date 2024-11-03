@@ -7,8 +7,10 @@ authors = ["Damilare Akinlaja"]
 [dependencies]
 tempfile = {workspace = true}
 anyhow ={ workspace = true}
+serde = {workspace = true}
 serde_json={workspace = true}
 lrol_parser = {path = "../lrol_parser"}
+lrol_analyzer = {path = "../lrol_analyzer"}
 clap = { version = "4.4", features = ["derive"] }
 colored = "2.0"
 thiserror = "1.0"

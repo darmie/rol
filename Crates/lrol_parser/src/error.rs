@@ -2,7 +2,7 @@ use std::fmt;
 
 use nom::error::{VerboseError, VerboseErrorKind};
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum ParserError {
     InvalidSyntax {
         line: usize,
@@ -49,7 +49,7 @@ impl std::error::Error for ParserError {}
 
 pub type ParserResult<T> = Result<T, ParserError>;
 
-// Helper function to get line and column from input and position
+
 pub(crate) fn get_error_position(full_input: &str, error_input: &str) -> (usize, usize) {
     // Calculate the offset where the error occurred
     let offset = full_input.len() - error_input.len();
@@ -65,7 +65,6 @@ pub(crate) fn get_error_position(full_input: &str, error_input: &str) -> (usize,
         }
     }
 
-    // Calculate column
     column = offset - current_line_start + 1;
 
     (line, column)
