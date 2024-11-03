@@ -1,6 +1,6 @@
 # Sudden spike in card activity, a deviation from past average transactions
 
-Here's the rule definition for the scenario where an entity suddenly starts making a larger volume of payments within a short time (2 hours), and the total value of the last 3 payments exceeds the average payment value over the past 2 days (you could increase the look back period). This rule is designed to detect suspicious spikes in transaction activity that could indicate card payment fraud. 
+Here's the rule definition for a scenario where an entity/customer suddenly starts making a larger volume of payments within a short time (2 hours), and the total value of the last 3 payments exceeds the average payment value over the past 2 days (you could increase the look back period). This rule is designed to detect suspicious spikes in transaction activity that could indicate card payment fraud. 
 
 
 ---
