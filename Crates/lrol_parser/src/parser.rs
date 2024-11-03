@@ -1,29 +1,30 @@
+
 use std::str::FromStr;
 
 use nom::bytes::complete::tag;
-use nom::complete::bool as Bool;
 use nom::{
     branch::alt,
     bytes::complete::take_while1,
     character::complete::{char, digit1, multispace0},
-    combinator::{map, map_res, opt, recognize, value, verify},
-    error::{context, convert_error, ParseError, VerboseError, VerboseErrorKind},
+    combinator::{map, map_res, opt, recognize},
+    error::{context, convert_error,  VerboseError},
     multi::separated_list0,
     sequence::{delimited, pair, tuple},
     Err as NomErr, IResult,
 };
 use serde::{Deserialize, Serialize};
 
+use crate::types::{Aggregation, Metadata};
 use crate::{
     error::{
-        convert_nom_error, syntax_error, ParserError, INVALID_EVAL_TYPE, INVALID_LOGICAL_OP,
+        convert_nom_error, syntax_error, ParserError, INVALID_EVAL_TYPE,
         INVALID_OPERANDS, INVALID_WEIGHT, MISSING_LEFT, MISSING_NAME, MISSING_OPERANDS,
         MISSING_OPERATOR, MISSING_RIGHT, MISSING_TYPE,
     },
     types::{Action, Evaluation, EvaluationType, Value},
 };
 
-#[derive(Debug, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Default, Clone, Serialize, Deserialize, PartialEq)]
 pub struct LrolModel {
     pub model_id: String,
     pub name: String,
@@ -31,11 +32,15 @@ pub struct LrolModel {
     pub threshold: f64,
     pub evaluations: Vec<Evaluation>,
     pub actions: Vec<Action>,
+    pub metadata: Option<Metadata>,
 }
 
 pub struct LrolParser;
 
 impl LrolParser {
+    pub fn new() -> Self {
+        LrolParser
+    }
     pub fn parse(input: &str) -> Result<LrolModel, ParserError> {
         match Self::parse_model(input) {
             Ok((_, model)) => Ok(model),
@@ -61,20 +66,6 @@ impl LrolParser {
         Ok((input, model))
     }
 
-    // Generic object parser
-    fn parse_object<F, T>(content_parser: F) -> impl Fn(&str) -> IResult<&str, T>
-    where
-        F: Fn(&str) -> IResult<&str, T> + Copy,
-    {
-        move |input: &str| {
-            delimited(
-                char('{'),
-                delimited(multispace0, content_parser, multispace0),
-                char('}'),
-            )(input)
-        }
-    }
-
     fn parse_model_contents(mut input: &str) -> IResult<&str, LrolModel, VerboseError<&str>> {
         let mut model_id = None;
         let mut name = None;
@@ -82,6 +73,7 @@ impl LrolParser {
         let mut threshold = None;
         let mut evaluations = None;
         let mut actions = None;
+        let mut metadata = None;
 
         loop {
             let (new_input, _) = multispace0(input)?;
@@ -142,6 +134,34 @@ impl LrolParser {
                                 );
                             }
                         }
+                        "metadata" => {
+                            if let Value::Object(v) = value {
+                                let mut _metadata = Metadata::default();
+                                for (key, value) in v {
+                                    if let Value::String(val) = value {
+                                        match key.clone().as_str() {
+                                            "created_by" => _metadata.created_by = Some(val),
+                                            "created_at" => _metadata.created_at = Some(val),
+                                            "last_updated" => _metadata.last_updated = Some(val),
+                                            "notes" => _metadata.notes = Some(val),
+                                            _ => {
+                                                println!("{}", key);
+                                                return syntax_error(
+                                                    new_input,
+                                                    "Invalid metadata field",
+                                                )
+                                            }
+                                        }
+                                    }
+                                }
+                                metadata = Some(_metadata)
+                            } else {
+                                return syntax_error(
+                                    new_input,
+                                    "Invalid metadata type: expected object",
+                                );
+                            }
+                        }
                         _ => {}
                     }
 
@@ -167,6 +187,7 @@ impl LrolParser {
                 threshold: threshold.unwrap_or_default(),
                 evaluations: Self::parse_evaluations_array(input, evaluations.unwrap_or_default()),
                 actions: Self::parse_actions_array(actions.unwrap_or_default()),
+                metadata,
             },
         ))
     }
@@ -245,10 +266,7 @@ impl LrolParser {
     fn parse_boolean(input: &str) -> IResult<&str, bool, VerboseError<&str>> {
         context(
             "boolean",
-            alt((
-                map(tag("true"), |_| true),
-                map(tag("false"), |_| false),
-            ))
+            alt((map(tag("true"), |_| true), map(tag("false"), |_| false))),
         )(input)
     }
 
@@ -298,6 +316,7 @@ impl LrolParser {
         let mut right = None;
         let mut operands = None;
         let mut weight = None;
+        let mut aggregation = None;
 
         for (key, value) in fields {
             match (key.as_str(), value) {
@@ -310,12 +329,10 @@ impl LrolParser {
                 }
                 ("operator", Value::String(v)) => {
                     operator = Some(v.clone());
-                    // Validate logical operators immediately
-                    if let Some(EvaluationType::Logical) = eval_type {
-                        if !matches!(v.as_str(), "AND" | "OR") {
-                            return syntax_error(current_input, INVALID_LOGICAL_OP);
-                        }
-                    }
+                }
+                ("aggregation", Value::String(v)) => {
+                    aggregation =
+                        Some(Aggregation::from_str(v).expect("expected valid aggregation type"));
                 }
                 ("operands", Value::Array(arr)) => {
                     operands = match arr.iter().try_fold(Vec::new(), |mut acc, v| {
@@ -382,6 +399,7 @@ impl LrolParser {
                 right,
                 operands,
                 weight,
+                aggregation,
             },
         ))
     }

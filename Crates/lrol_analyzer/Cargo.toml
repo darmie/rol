@@ -1,0 +1,10 @@
+[package]
+name = "lrol_analyzer"
+version = "0.1.0"
+edition = "2021"
+authors = ["Damilare Akinlaja"]
+
+[dependencies]
+lrol_parser = {path = "../lrol_parser"}
+dateparser = "0.2.1"
+tempfile = {workspace = true}
