@@ -100,7 +100,7 @@ Here is an example of an **LROL rule** for detecting high-value transactions ini
 4. **Extend with ML**: Optionally, integrate machine learning-driven scores or anomaly detection features into your LROL evaluations to enhance decision-making.
 
 ---
-## Developer Tools & Libries
+## Developer Tools & Libraries
 1. [**LROL PARSER**](./Crates/lrol_parser/)
 2. [**LROL ANALYZER & VALIDATOR**](./Crates/lrol_analyzer/)
 3. [**LROL CLI**](./lrol-cli.md)
