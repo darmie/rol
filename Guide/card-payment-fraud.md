@@ -133,8 +133,8 @@ The rule is split into different checks, or evaluations. Each evaluation focuses
    - **Threshold-Based Logic**: Thresholds (e.g., exceeding average spending) are applied to evaluate if current spending significantly deviates from norms. By setting thresholds (like comparing to twice the recent average), the rule flags transactions only when spending exceeds defined limits, minimizing noise.
    - **Real-Time Time Windowing**: Using time-based filters (like checking the last 2 hours and last 2 days) helps in setting precise evaluation windows. This is essential for spotting unusual short-term spikes within a longer trend, a classic signal of fraud.
 
-### Additional Machine Learning Concepts
-   - In many ML-driven fraud detection models, creating features based on historical averages, transaction sums, and time windows would be core feature engineering steps. This rule’s use of different evaluations represents manual feature engineering techniques common in ML.
+### Additional Concepts
+   - In many ML-driven fraud detection models, creating features based on historical averages, transaction sums, and time windows would be core feature engineering steps. This rule’s use of different evaluations represents feature engineering techniques common in ML.
    - **Anomaly Detection Principles**: The rule mirrors basic anomaly detection by highlighting deviations from an average, a key statistical method that is also fundamental in ML fraud detection. When total spending in the last 3 payments exceeds the 2-day average, it treats the activity as anomalous.
 
 ---
