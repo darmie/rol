@@ -101,7 +101,7 @@ Here is an example of an **LROL rule** for detecting high-value transactions ini
 
 ---
 ## Documentation
-1. [**LROL GUIDE**](./Guide/introduction.md)
+1. [**LROL GUIDE**](./Guide/)
 2. [**LROL RULE LIBRARY**](./Library/01%20intro.md)
 
 ---
