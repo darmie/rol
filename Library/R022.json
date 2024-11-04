@@ -1,0 +1,50 @@
+{
+    "model_id": "FRAUD-CONN-022",
+    "name": "Proxy or VPN Connection",
+    "description": "Flags transactions originating from IP addresses associated with proxies, VPNs, or Tor networks.",
+    "threshold": 0.85,
+    "evaluations": [
+      {
+        "name": "Proxy_Connection_Check",
+        "type": "comparison",
+        "left": "proxy",
+        "operator": "==",
+        "right": true,
+        "weight": 3
+      },
+      {
+        "name": "VPN_Connection_Check",
+        "type": "comparison",
+        "left": "vpn",
+        "operator": "==",
+        "right": true,
+        "weight": 3
+      },
+      {
+        "name": "Tor_Connection_Check",
+        "type": "comparison",
+        "left": "tor",
+        "operator": "==",
+        "right": true,
+        "weight": 4
+      },
+      {
+        "name": "High_Risk_Connection_Logic",
+        "type": "logical",
+        "operator": "OR",
+        "operands": [
+          "Proxy_Connection_Check",
+          "VPN_Connection_Check",
+          "Tor_Connection_Check"
+        ],
+        "weight": 5
+      }
+    ],
+    "actions": [
+      {
+        "type": "flag_transaction",
+        "reason": "Transaction flagged due to high-risk connection (proxy, VPN, or Tor detected)."
+      }
+    ]
+  }
+  
