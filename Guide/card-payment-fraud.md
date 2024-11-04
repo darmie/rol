@@ -183,8 +183,7 @@ This rule targets fraud patterns that exhibit sudden changes in transaction volu
           "right": "datetime(now, '-3 hours')"
         }
       ],
-      "weight": 3,
-      "limit": 3
+      "weight": 3
     },
     {
       "name": "Recent_Payments_Sum_Short",
