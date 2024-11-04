@@ -113,8 +113,7 @@ The rule is split into different checks, or evaluations. Each evaluation focuses
 5. **High_Payment_Volume_Logic**: Combines `Recent_Payments_Sum` and `High_Value_Recent_Payments_Check` using `AND` to ensure that both high volume and high value are present before triggering the rule.
 
 ## Enhanced Payment Volume and Risk-Based Anomaly Detection
-
-This rule targets fraud patterns that exhibit sudden changes in transaction volume and unusual transaction times, as well as significant deviations from typical transaction amounts.
+This rule targets fraud patterns that exhibit sudden changes in transaction volume and unusual transaction times, as well as **significant deviations** from typical transaction amounts.
 ---
 
 ```json
