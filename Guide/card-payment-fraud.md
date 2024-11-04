@@ -112,6 +112,186 @@ The rule is split into different checks, or evaluations. Each evaluation focuses
 
 5. **High_Payment_Volume_Logic**: Combines `Recent_Payments_Sum` and `High_Value_Recent_Payments_Check` using `AND` to ensure that both high volume and high value are present before triggering the rule.
 
+## Enhanced Payment Volume and Risk-Based Anomaly Detection
+
+This rule targets fraud patterns that exhibit sudden changes in transaction volume and unusual transaction times, as well as significant deviations from typical transaction amounts.
+---
+
+```json
+{
+  "model_id": "FRAUD-VOL-003",
+  "name": "Enhanced Payment Volume and Risk-Based Anomaly Detection",
+  "description": "Detects sudden increase in payment volumes with dynamic risk levels and statistical anomaly detection.",
+  "threshold": 0.9,
+  "evaluations": [
+    {
+      "name": "Night_Time_Transaction",
+      "type": "comparison",
+      "left": "strftime('%H', transaction_date)",
+      "operator": "NOT IN",
+      "right": ["06", "07", "08", "09", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20"],
+      "weight": 2
+    },
+    {
+      "name": "Historical_Payment_Avg",
+      "type": "aggregation",
+      "aggregation": "AVG",
+      "field": "amount",
+      "conditions": [
+        {
+          "type": "comparison",
+          "left": "transaction_date",
+          "operator": ">=",
+          "right": "datetime(now, '-30 days')"
+        }
+      ],
+      "weight": 2
+    },
+    {
+      "name": "Transaction_STDDEV",
+      "type": "aggregation",
+      "aggregation": "STDDEV",
+      "field": "amount",
+      "conditions": [
+        {
+          "type": "comparison",
+          "left": "transaction_date",
+          "operator": ">=",
+          "right": "datetime(now, '-30 days')"
+        }
+      ],
+      "weight": 2
+    },
+    {
+      "name": "STDDEV_Anomaly_Check",
+      "type": "comparison",
+      "left": "amount",
+      "operator": ">",
+      "right": "Historical_Payment_Avg + 2 * Transaction_STDDEV",
+      "weight": 4
+    },
+    {
+      "name": "Last_3_Payments_Avg",
+      "type": "aggregation",
+      "aggregation": "AVG",
+      "field": "amount",
+      "conditions": [
+        {
+          "type": "comparison",
+          "left": "transaction_date",
+          "operator": ">=",
+          "right": "datetime(now, '-3 hours')"
+        }
+      ],
+      "weight": 3,
+      "limit": 3
+    },
+    {
+      "name": "Recent_Payments_Sum_Short",
+      "type": "aggregation",
+      "aggregation": "SUM",
+      "field": "amount",
+      "conditions": [
+        {
+          "type": "comparison",
+          "left": "transaction_date",
+          "operator": ">=",
+          "right": "datetime(now, '-3 hours')"
+        }
+      ],
+      "weight": 3
+    },
+    {
+      "name": "High_Deviation_Check",
+      "type": "comparison",
+      "left": "@Last_3_Payments_Avg",
+      "operator": ">",
+      "right": "Historical_Payment_Avg * 2",
+      "weight": 3
+    },
+    {
+      "name": "Risk_Level_Assessment",
+      "type": "conditional",
+      "if": [
+        {
+          "condition":  {
+              "type": "logical",
+              "operator": "AND",
+              "operands": [
+                "Night_Time_Transaction",
+                "High_Deviation_Check"
+              ],
+            "weight": 4
+        },
+          "result": "critical"
+        }
+            ],
+      "else": "low"
+    },
+    {
+      "name": "Critical_Risk_Check",
+      "type": "comparison",
+      "left": "@Risk_Level_Assessment",
+      "operator": "=",
+      "right": "critical",
+      "weight": 5
+    },
+    {
+      "name": "High_Risk_Transaction_Logic",
+      "type": "logical",
+      "operator": "AND",
+      "operands": [
+        "Recent_Payments_Sum_Short",
+        "Last_3_Payments_Avg",
+        "STDDEV_Anomaly_Check",
+        "Critical_Risk_Check"
+      ],
+      "weight": 5
+    }
+  ],
+  "actions": [
+    {
+      "type": "flag_transaction",
+      "reason": "Unusual transaction volume and risk pattern detected based on risk level and anomaly."
+    }
+  ]
+}
+```
+
+---
+#### Key Components and Their Roles
+
+- **Night_Time_Transaction**: Checks if the transaction time falls outside typical business hours (between 6 AM and 8 PM). Transactions outside this range are flagged, as unusual times are often associated with fraud. This has a lower weight (2), indicating it’s not conclusive by itself.
+
+- **Historical_Payment_Avg** and **Transaction_STDDEV**: These aggregations calculate the **average transaction amount** and the **standard deviation** for the entity over the last 30 days, giving a baseline for detecting significant deviations. This allows for **contextual anomaly detection**, flagging only those transactions that deviate substantially from the usual pattern.
+
+- **STDDEV_Anomaly_Check**: This comparison flags a transaction if the amount is more than **2 standard deviations above the 30-day average**, a common statistical threshold for identifying anomalies. The higher weight (4) emphasizes its significance as a potential fraud indicator.
+
+- **Last_3_Payments_Avg** and **Recent_Payments_Sum_Short**: These calculate the average and total of the last three transactions within a **3-hour window**. This allows detection of sudden surges in payment activity, which may indicate unusual behavior.
+
+- **High_Deviation_Check**: Compares the average of the last three payments to twice the historical average, flagging recent transactions that are disproportionately high compared to typical activity.
+
+- **Risk_Level_Assessment** (Conditional Case Operation): This component assesses risk dynamically. If both **Night_Time_Transaction** and **High_Deviation_Check** are true (combined under `Critical_Risk_Logic`), the risk level is assigned as `"critical"`. Otherwise, the rule defaults to `"low"`. This component supports flexible, context-aware decision-making.
+
+- **Critical_Risk_Check**: This comparison checks if `Risk_Level_Assessment` has assigned a `"critical"` risk level. If so, this condition contributes heavily to the final decision.
+
+- **High_Risk_Transaction_Logic**: Combines all major risk indicators (including `Critical_Risk_Check` and others) using `AND` logic. The overall rule triggers a **flag_transaction action** if all conditions are met, implying a high likelihood of fraud.
+
+#### Purpose and Solution
+
+This rule effectively identifies transactions that may be part of **fraudulent activity** by:
+- Detecting statistically significant deviations in transaction volume.
+- Considering the timing and recency of transactions, which are often indicative of fraud.
+- Dynamically assessing risk based on contextual factors.
+
+#### Impact on False Positives
+- **Reduced False Positives**: By combining multiple factors (e.g., statistical deviation, timing, recent transaction patterns), the rule reduces the chances of flagging benign transactions that meet only one or two criteria.
+- **Conditional Scoring**: The conditional scoring (`Risk_Level_Assessment`) helps avoid flagging low-risk transactions that may occur outside typical hours or are high value but otherwise show no signs of fraud.
+
+#### Impact on False Negatives
+- **Reduced False Negatives**: The use of **statistical deviation checks** (`STDDEV_Anomaly_Check`) and **dynamic risk assessments** ensures that subtle fraud patterns, such as frequent small payments or transactions that are just above normal limits, are less likely to be overlooked.
+- **Sensitive to Combined Risk Factors**: The rule’s design allows it to catch fraud cases that may involve subtle but significant combinations of timing, amount, and recent activity, reducing the chances of missing fraud.
+
 ---
 ## LROL strenghts in use
 
