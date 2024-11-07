@@ -49,7 +49,9 @@ Here is a sample ASA request
 
 Here’s the rule with the **available balance check** included.
 
-### Revised Rule Definition with Available Balance Check
+![auth-stream-access](https://github.com/user-attachments/assets/bab16b1a-15e2-4d46-b053-d017efda0f06)
+
+### Rule Definition with Available Balance Check
 
 ```json
 {
