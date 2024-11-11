@@ -1,3 +1,5 @@
+[![Rust](https://github.com/runloci/rol/actions/workflows/rust.yml/badge.svg)](https://github.com/runloci/rol/actions/workflows/rust.yml)
+___
 # ROL
 LROL is a domain-specific language that simplifies the creation of fraud/risk detection rules by using a structured JSON-based format.
 
